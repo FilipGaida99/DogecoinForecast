@@ -13,7 +13,8 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.layers import Bidirectional, Dropout, Activation, Dense, LSTM
 from tensorflow.python.keras.layers import CuDNNLSTM
 from tensorflow.keras.models import Sequential
-
+from random import seed
+from random import random
 
 def to_sequences(data, seq_len):
     d = []
@@ -27,12 +28,12 @@ def to_sequences(data, seq_len):
 def preprocess(data_raw, seq_len, days):
     data = to_sequences(data_raw, seq_len)
 
-    x_train = data[:data.shape[0] - days - 1, :-1, :]
-    y_train = data[:data.shape[0] - days - 1, -1, :]
+    num_train = data.shape[0] - days
 
-    x_predict = data[data.shape[0] - days:, :-1, :]
+    x_train = data[:num_train, :-1, :]
+    y_train = data[:num_train, -1, :]
 
-    return x_train, y_train, x_predict
+    return x_train, y_train
 
 
 def forecast(data_path, days):
@@ -44,42 +45,35 @@ def forecast(data_path, days):
     df = pd.read_csv(data_path)
     df['Date'] = pd.to_datetime(df.Date, infer_datetime_format=True)
     base = df['Date'].max() + datetime.timedelta(days=1)
-
+    seed(2137)
     dfa = pd.DataFrame({'Date': [base + datetime.timedelta(days=x) for x in range(days)]})
-    df = df.append(dfa, ignore_index=True)
+    #df = df.append(dfa, ignore_index=True)
     df.sort_values(by=['Date'], ascending=True, inplace=True, ignore_index=True)
 
-    scaler = MinMaxScaler()
+    #scaler = MinMaxScaler()
 
-    close_price = df.Close.values.reshape(-1, 1)
+    #close_price = df.Close.values.reshape(-1, 1)
 
-    scaled_close = scaler.fit_transform(close_price)
+    #scaled_close = scaler.fit_transform(close_price)
 
     #scaled_close = scaled_close[~np.isnan(scaled_close)]
-    scaled_close = scaled_close.reshape(-1, 1)
+    #scaled_close = scaled_close.reshape(-1, 1)
 
-    x_train, y_train, x_predict = \
-        preprocess(scaled_close, SEQ_LEN, days)
+    #x_train, y_train, x_predict = \
+    #    preprocess(scaled_close, SEQ_LEN, days)
 
     num_features = df.shape[1]
-    model = keras.Sequential()
-
-    model.add(Bidirectional(
-        LSTM(WINDOW_SIZE, return_sequences=True),
-        input_shape=(WINDOW_SIZE, x_train.shape[-1])
-    ))
-    model.add(Dropout(rate=DROPOUT))
-
-    model.add(Bidirectional(
-        LSTM((WINDOW_SIZE * 2), return_sequences=True)
-    ))
-    model.add(Dropout(rate=DROPOUT))
-
-    model.add(Bidirectional(
-        LSTM(WINDOW_SIZE, return_sequences=False)
-    ))
-
-    model.add(Dense(units=1))
+    OUT_STEPS = 20
+    model = tf.keras.Sequential([
+        # Shape [batch, time, features] => [batch, lstm_units]
+        # Adding more `lstm_units` just overfits more quickly.
+        tf.keras.layers.LSTM(32, return_sequences=False),
+        # Shape => [batch, out_steps*features]
+        tf.keras.layers.Dense(OUT_STEPS * num_features,
+                              kernel_initializer=tf.initializers.zeros()),
+        # Shape => [batch, out_steps, features]
+        tf.keras.layers.Reshape([OUT_STEPS, num_features])
+    ])
 
     model.add(Activation('linear'))
 
@@ -98,5 +92,5 @@ def forecast(data_path, days):
     )
 
     y_hat = model.predict(x_predict)
-    y_hat_inverse = scaler.inverse_transform(y_hat)
-    return y_hat_inverse
+    #y_hat_inverse = scaler.inverse_transform(y_hat)
+    return y_hat
