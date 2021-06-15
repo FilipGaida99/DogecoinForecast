@@ -1,3 +1,4 @@
-from Forecaster import forecast
+from forecast.Forecaster import forecast
 
-forecast('Dogecoin-original.csv', 40, True)
+if __name__ == '__main__':
+    forecast('datasets/Dogecoin-original.csv', 40, True)

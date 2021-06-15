@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
-from PredictionWindow import WindowGenerator, compile_and_fit
+from .PredictionWindow import WindowGenerator, compile_and_fit
 
 
 def forecast(data_path, days, plot_test=False):
