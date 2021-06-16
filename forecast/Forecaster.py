@@ -53,7 +53,8 @@ def forecast(data_path, days, plot_test=False):
     for x in predicts_data[1:]:
         sums += x
     predicts_data = sums / predicts.shape[0]
-    predicts_data = predicts_data * train_std[3] + train_mean[3]
+    for x in range(0, predicts_data.shape[0]):
+        predicts_data[x] = predicts_data[x] * train_std + train_mean
     if plot_test:
         plt.plot(predicts_data[:, 3], label="Predicted price", color='red')
         test_data = test_df['Close'] * train_std[3] + train_mean[3]
