@@ -1,6 +1,8 @@
-import matplotlib.pyplot as plt
+import mplfinance as mpf
+import numpy as np
 import pandas as pd
 import tensorflow as tf
+
 from .PredictionWindow import WindowGenerator, compile_and_fit
 
 
@@ -56,15 +58,32 @@ def forecast(data_path, days, plot_test=False):
     for x in range(0, predicts_data.shape[0]):
         predicts_data[x] = predicts_data[x] * train_std + train_mean
     if plot_test:
-        plt.plot(predicts_data[:, 3], label="Predicted price", color='red')
-        test_data = test_df['Close'] * train_std[3] + train_mean[3]
+        test_data = test_df[:out_steps]
+        test_data = test_data * train_std + train_mean
         test_data.reset_index(drop=True, inplace=True)
-        test_data = test_data[:out_steps]
-        plt.plot(test_data, label="Actual price", color='green')
-        plt.xlabel('Days')
-        plt.ylabel('Price(USD)')
-        plt.title('Dogecoin Price Prediction')
-        plt.legend(loc='best')
-        plt.show()
+
+        candle_plot(predicts_data, test_data, date_time[:out_steps])
 
     return predicts_data
+
+
+def candle_plot(predicts_data, test_data, date_time):
+    if type(predicts_data) is not pd.DataFrame:
+        if isinstance(predicts_data, np.ndarray):
+            predicts_data = np.delete(predicts_data, [4, 5], 1)
+            predicts_data = pd.DataFrame(predicts_data, columns=['Open', 'High', 'Low', 'Close'])
+        else:
+            raise TypeError("Expect predicts_data as numpy.ndarray or pandas.DataFrame.")
+
+    predicts_data['Datetime'] = pd.to_datetime(date_time)
+    predicts_data = predicts_data.set_index('Datetime')
+
+    if type(test_data) is not pd.DataFrame:
+        raise TypeError("Expect test_data as pandas.DataFrame.")
+
+    test_data['Datetime'] = pd.to_datetime(date_time)
+    test_data = test_data.set_index('Datetime')
+
+    ap = mpf.make_addplot(test_data, type='candle')
+    title = 'Dogecoin Price Prediction'
+    mpf.plot(predicts_data, type='line', style='charles', title=title, ylabel='Price [USD]', addplot=ap)

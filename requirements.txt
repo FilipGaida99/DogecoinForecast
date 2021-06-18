@@ -1,5 +1,4 @@
 tensorflow
-matplotlib
 mplfinance
 numpy
 pandas
