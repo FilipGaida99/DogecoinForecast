@@ -33,14 +33,6 @@ class WindowGenerator:
 
         self.label_start = self.total_window_size - self.label_width
         self.labels_slice = slice(self.label_start, None)
-        self.label_indices = np.arange(self.total_window_size)[self.labels_slice]
-
-    def __repr__(self):
-        return '\n'.join([
-            f'Total window size: {self.total_window_size}',
-            f'Input indices: {self.input_indices}',
-            f'Label indices: {self.label_indices}',
-            f'Label column name(s): {self.label_columns}'])
 
     def split_window(self, features):
         inputs = features[:, self.input_slice, :]
@@ -83,17 +75,6 @@ class WindowGenerator:
     def test(self):
         return self.make_dataset(self.test_df)
 
-    @property
-    def example(self):
-        """Get and cache an example batch of `inputs, labels` for plotting."""
-        result = getattr(self, '_example', None)
-        if result is None:
-            # No example batch was found, so get one from the `.train` dataset
-            result = next(iter(self.train))
-            # And cache it for next time
-            self._example = result
-        return result
-
 
 def compile_and_fit(model, window, patience=2):
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -105,5 +86,6 @@ def compile_and_fit(model, window, patience=2):
                   metrics=[tf.metrics.MeanAbsoluteError()])
 
     history = model.fit(window.train, epochs=MAX_EPOCHS,
-                        validation_data=window.val)
+                        validation_data=window.val,
+                        callbacks=[early_stopping])
     return history
