@@ -2,6 +2,7 @@ import mplfinance as mpf
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import datetime
 
 from .PredictionWindow import WindowGenerator, compile_and_fit
 
@@ -13,10 +14,12 @@ def forecast(data_path, days, plot_test=False):
     df['Date'] = pd.to_datetime(df.Date, infer_datetime_format=True)
     df.sort_values(by=['Date'], ascending=True, inplace=True, ignore_index=True)
 
+    n = len(df)
+
+    last_date = df['Date'].iloc[int(n * 0.9)]
     date_time = pd.to_datetime(df.pop('Date'), format='%d.%m.%Y %H:%M:%S')
     column_indices = {name: i for i, name in enumerate(df.columns)}
 
-    n = len(df)
     train_df = df[0:int(n * 0.7)]
     val_df = df[int(n * 0.7):int(n * 0.9)]
     test_df = df[int(n * 0.9):]
@@ -61,8 +64,8 @@ def forecast(data_path, days, plot_test=False):
         test_data = test_df[:out_steps]
         test_data = test_data * train_std + train_mean
         test_data.reset_index(drop=True, inplace=True)
-
-        candle_plot(predicts_data, test_data, date_time[:out_steps])
+        date_range = pd.date_range(start=last_date, periods=out_steps)
+        candle_plot(predicts_data, test_data, date_range)
 
     return predicts_data
 
@@ -84,6 +87,6 @@ def candle_plot(predicts_data, test_data, date_time):
     test_data['Datetime'] = pd.to_datetime(date_time)
     test_data = test_data.set_index('Datetime')
 
-    ap = mpf.make_addplot(test_data, type='candle')
     title = 'Dogecoin Price Prediction'
-    mpf.plot(predicts_data, type='line', style='charles', title=title, ylabel='Price [USD]', addplot=ap)
+    mpf.plot(predicts_data, type='candle', style='charles', title=title, ylabel='Price [USD]')
+    mpf.plot(test_data, type='candle', style='charles', title=title+'_test', ylabel='Price [USD]')
