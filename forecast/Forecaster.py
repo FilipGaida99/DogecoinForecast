@@ -16,12 +16,13 @@ def forecast(data_path, days, plot_test=False):
 
     n = len(df)
 
-    last_date = df['Date'].iloc[int(n * 0.9)]
+    last_date = df['Date'].iloc[-1]
+    last_date = last_date + datetime.timedelta(days=1)
     date_time = pd.to_datetime(df.pop('Date'), format='%d.%m.%Y %H:%M:%S')
     column_indices = {name: i for i, name in enumerate(df.columns)}
 
-    train_df = df[0:int(n * 0.7)]
-    val_df = df[int(n * 0.7):int(n * 0.9)]
+    train_df = df
+    val_df = df[int(n * 0.95):]
     test_df = df[int(n * 0.9):]
 
     num_features = df.shape[1]
@@ -53,11 +54,7 @@ def forecast(data_path, days, plot_test=False):
 
     history = compile_and_fit(multi_lstm_model, multi_window)
     predicts = multi_lstm_model.predict(multi_window.test)
-    predicts_data = predicts
-    sums = predicts_data[0]
-    for x in predicts_data[1:]:
-        sums += x
-    predicts_data = sums / predicts.shape[0]
+    predicts_data = predicts[-1]
     for x in range(0, predicts_data.shape[0]):
         predicts_data[x] = predicts_data[x] * train_std + train_mean
     if plot_test:
@@ -89,4 +86,4 @@ def candle_plot(predicts_data, test_data, date_time):
 
     title = 'Dogecoin Price Prediction'
     mpf.plot(predicts_data, type='candle', style='charles', title=title, ylabel='Price [USD]')
-    mpf.plot(test_data, type='candle', style='charles', title=title+'_test', ylabel='Price [USD]')
+    #mpf.plot(test_data, type='candle', style='charles', title=title+'_test', ylabel='Price [USD]')

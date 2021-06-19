@@ -64,7 +64,7 @@ class WindowGenerator:
             targets=None,
             sequence_length=self.total_window_size,
             sequence_stride=1,
-            shuffle=True,
+            shuffle=False,
             batch_size=32, )
 
         ds = ds.map(self.split_window)
@@ -105,6 +105,5 @@ def compile_and_fit(model, window, patience=2):
                   metrics=[tf.metrics.MeanAbsoluteError()])
 
     history = model.fit(window.train, epochs=MAX_EPOCHS,
-                        validation_data=window.val,
-                        callbacks=[early_stopping])
+                        validation_data=window.val)
     return history
