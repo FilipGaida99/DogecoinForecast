@@ -24,11 +24,13 @@ def forecast(data_path, days, plot_test=False):
     date_time = pd.to_datetime(df.pop('Date'), format='%d.%m.%Y %H:%M:%S')
     column_indices = {name: i for i, name in enumerate(df.columns)}
 
+    # Empty data for shift of inputs
     if not plot_test:
         empty_data = []
-        for i in range(0,out_steps):
+        for i in range(0, out_steps):
             empty_data.insert(0, {'Open': 0.0,'High':0.0,'Low':0.0,'Close':0.0,'Volume':0.0,'Market Cap':0.0})
         df = df.append(pd.DataFrame(empty_data), ignore_index=True)
+
     train_df = df[:df.shape[0] - out_steps]
     val_df = train_df[int(train_df.shape[0] * 0.95):]
     test_df = df[df.shape[0] - 2 * out_steps:]
@@ -65,7 +67,6 @@ def forecast(data_path, days, plot_test=False):
     predicts_data = predicts[-1]
     for x in range(0, predicts_data.shape[0]):
         predicts_data[x] = predicts_data[x] * train_std + train_mean
-    predicts_data = predicts_data[::-1]
     test_data = test_df
     test_data = test_data * train_std + train_mean
     test_data.reset_index(drop=True, inplace=True)
