@@ -3,8 +3,10 @@ import tensorflow as tf
 
 MAX_EPOCHS = 50
 
-# Class for preparing input window.
+
 class WindowGenerator:
+    """Class for preparing input window."""
+
     def __init__(self, input_width, label_width, shift,
                  train_df, val_df, test_df,
                  label_columns=None):

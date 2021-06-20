@@ -12,8 +12,9 @@ warnings.filterwarnings('ignore')
 # Value in the range (0,1) that defines what part of the training data will be used for validation
 VALIDATION_SPLIT = 0.05
 
-# Forecasting method.
+
 def forecast(data_path, days, plot_test=False):
+    """Forecasting method."""
     out_steps = int(days)
     # Prepare data
     df = pd.read_csv(data_path)
@@ -34,7 +35,7 @@ def forecast(data_path, days, plot_test=False):
     if not plot_test:
         empty_data = []
         for i in range(0, out_steps):
-            empty_data.insert(0, {'Open': 0.0,'High':0.0,'Low':0.0,'Close':0.0,'Volume':0.0,'Market Cap':0.0})
+            empty_data.insert(0, {'Open': 0.0, 'High': 0.0, 'Low': 0.0, 'Close': 0.0, 'Volume': 0.0, 'Market Cap': 0.0})
         df = df.append(pd.DataFrame(empty_data), ignore_index=True)
 
     # Data split
@@ -87,8 +88,9 @@ def forecast(data_path, days, plot_test=False):
 
     return predicts_data
 
-# Data plotting function
+
 def candle_plot(predicts_data, test_data, date_time, plot_test):
+    """Data plotting function"""
     if type(predicts_data) is not pd.DataFrame:
         if isinstance(predicts_data, np.ndarray):
             predicts_data = np.delete(predicts_data, [4, 5], 1)
