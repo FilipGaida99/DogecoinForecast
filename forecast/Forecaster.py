@@ -32,8 +32,9 @@ def forecast(data_path, days, plot_test=False):
         df = df.append(pd.DataFrame(empty_data), ignore_index=True)
 
     train_df = df[:df.shape[0] - out_steps]
-    val_df = train_df[int(train_df.shape[0] * 0.95):]
-    test_df = df[df.shape[0] - 2 * out_steps:]
+    val_df = train_df[:int(train_df.shape[0] * 0.05)]
+    train_df = train_df[int(train_df.shape[0] * 0.05):]
+    test_df = df[df.shape[0] - 2*out_steps:]
 
     num_features = df.shape[1]
 
@@ -44,7 +45,7 @@ def forecast(data_path, days, plot_test=False):
     val_df = (val_df - train_mean) / train_std
     test_df = (test_df - train_mean) / train_std
 
-    multi_window = WindowGenerator(input_width=1,
+    multi_window = WindowGenerator(input_width=out_steps,
                                    label_width=out_steps,
                                    shift=out_steps,
                                    train_df=train_df,
@@ -54,7 +55,7 @@ def forecast(data_path, days, plot_test=False):
     multi_lstm_model = tf.keras.Sequential([
         # Shape [batch, time, features] => [batch, lstm_units]
         # Adding more `lstm_units` just overfits more quickly.
-        tf.keras.layers.LSTM(32, return_sequences=False),
+        tf.keras.layers.LSTM(100, return_sequences=False),
         # Shape => [batch, out_steps*features]
         tf.keras.layers.Dense(out_steps * num_features,
                               kernel_initializer=tf.initializers.zeros()),

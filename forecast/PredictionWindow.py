@@ -86,6 +86,5 @@ def compile_and_fit(model, window, patience=2):
                   metrics=[tf.metrics.MeanAbsoluteError()])
 
     history = model.fit(window.train, epochs=MAX_EPOCHS,
-                        validation_data=window.val,
-                        callbacks=[early_stopping])
+                        validation_data=window.val)
     return history
