@@ -3,7 +3,7 @@ import tensorflow as tf
 
 MAX_EPOCHS = 50
 
-
+# Class for preparing input window.
 class WindowGenerator:
     def __init__(self, input_width, label_width, shift,
                  train_df, val_df, test_df,
@@ -57,7 +57,7 @@ class WindowGenerator:
             sequence_length=self.total_window_size,
             sequence_stride=1,
             shuffle=False,
-            batch_size=32, )
+            batch_size=32)
 
         ds = ds.map(self.split_window)
 
@@ -76,15 +76,12 @@ class WindowGenerator:
         return self.make_dataset(self.test_df)
 
 
-def compile_and_fit(model, window, patience=2):
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                      patience=patience,
-                                                      mode='min')
+# Function to compile and train model.
+def compile_and_fit(model, window):
 
     model.compile(loss=tf.losses.MeanSquaredError(),
-                  optimizer=tf.optimizers.Adam(),
-                  metrics=[tf.metrics.MeanAbsoluteError()])
+                  optimizer=tf.optimizers.Adam())
 
     history = model.fit(window.train, epochs=MAX_EPOCHS,
-                        validation_data=window.val)
+                        validation_data=window.val,)
     return history
